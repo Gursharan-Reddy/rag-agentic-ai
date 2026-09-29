@@ -31,7 +31,6 @@ def run_ingestion(pdf_path: str, index_name: str = PINECONE_INDEX_NAME):
     )
     chunks = text_splitter.split_documents(docs)
 
-    # Free local embeddings (all-MiniLM-L6-v2 outputs dimension 384)
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
     setup_pinecone_index(index_name, dimension=384)
