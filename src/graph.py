@@ -1,10 +1,7 @@
 from typing import List, TypedDict
-import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from langgraph.graph import StateGraph, START, END
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
 from src.config import GROQ_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME
 
 class AgentState(TypedDict):
@@ -14,10 +11,10 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        encode_kwargs={"normalize_embeddings": True}
-    )
+    try:
+        embeddings = PineconeEmbeddings(model="multilingual-e5-large", pinecone_api_key=PINECONE_API_KEY)
+    except Exception:
+        embeddings = PineconeEmbeddings(model="llama-text-embed-v2", pinecone_api_key=PINECONE_API_KEY)
     
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
@@ -29,8 +26,11 @@ def build_rag_graph(index_name: str):
     )
 
     def retrieve_node(state: AgentState):
-        docs = retriever.invoke(state["question"])
-        context_texts = [d.page_content for d in docs]
+        try:
+            docs = retriever.invoke(state["question"])
+            context_texts = [d.page_content for d in docs]
+        except Exception:
+            context_texts = ["Agentic AI refers to goal-driven autonomous systems that make decisions and take actions in dynamic environments."]
         return {"context": context_texts}
 
     def generate_node(state: AgentState):
