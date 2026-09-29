@@ -3,7 +3,7 @@ from langgraph.graph import StateGraph, START, END
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain_pinecone import PineconeVectorStore
-from src.config import GROQ_API_KEY, PINECONE_API_KEY
+from src.config import GROQ_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME
 
 class AgentState(TypedDict):
     question: str
@@ -12,9 +12,12 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # Use cache_folder to store models safely or prevent re-downloads
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2",
+        cache_folder="./model_cache"
+    )
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
-    
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
     
     llm = ChatGroq(
