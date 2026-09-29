@@ -1,7 +1,10 @@
 from typing import List, TypedDict
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from langgraph.graph import StateGraph, START, END
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
+from langchain_pinecone import PineconeVectorStore
 from src.config import GROQ_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME
 
 class AgentState(TypedDict):
@@ -11,9 +14,9 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    embeddings = PineconeEmbeddings(
-        model="multilingual-e5-large",
-        pinecone_api_key=PINECONE_API_KEY
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2",
+        encode_kwargs={"normalize_embeddings": True}
     )
     
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
