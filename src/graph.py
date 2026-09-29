@@ -11,8 +11,8 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    # Use lightweight Pinecone cloud embeddings to prevent memory crashes on Render
-    embeddings = PineconeEmbeddings(model="multilingual-e5-small", pinecone_api_key=PINECONE_API_KEY)
+    # Use the supported Pinecone embedding model name
+    embeddings = PineconeEmbeddings(model="multilingual-e5-large", pinecone_api_key=PINECONE_API_KEY)
     
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
