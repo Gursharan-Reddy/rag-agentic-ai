@@ -1,8 +1,7 @@
 from typing import List, TypedDict
 from langgraph.graph import StateGraph, START, END
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
 from src.config import GROQ_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME
 
 class AgentState(TypedDict):
@@ -12,15 +11,9 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    # Initialize HuggingFace embeddings with explicit local offline fallback behavior if needed
-    try:
-        embeddings = HuggingFaceEmbeddings(
-            model_name="all-MiniLM-L6-v2",
-            encode_kwargs={"normalize_embeddings": True}
-        )
-    except Exception:
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
+    # Use lightweight Pinecone cloud embeddings to prevent memory crashes on Render
+    embeddings = PineconeEmbeddings(model="multilingual-e5-small", pinecone_api_key=PINECONE_API_KEY)
+    
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
     
