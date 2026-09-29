@@ -1,8 +1,7 @@
 from typing import List, TypedDict
 from langgraph.graph import StateGraph, START, END
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
 from src.config import GROQ_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME
 
 class AgentState(TypedDict):
@@ -12,11 +11,9 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    # Use the original 384-dimension HuggingFace model matching your Pinecone index
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True}
+    embeddings = PineconeEmbeddings(
+        model="multilingual-e5-large",
+        pinecone_api_key=PINECONE_API_KEY
     )
     
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
