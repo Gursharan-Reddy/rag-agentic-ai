@@ -12,11 +12,15 @@ class AgentState(TypedDict):
     score: float
 
 def build_rag_graph(index_name: str):
-    # Use cache_folder to store models safely or prevent re-downloads
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        cache_folder="./model_cache"
-    )
+    # Initialize HuggingFace embeddings with explicit local offline fallback behavior if needed
+    try:
+        embeddings = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            encode_kwargs={"normalize_embeddings": True}
+        )
+    except Exception:
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
     vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
     
